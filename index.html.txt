@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Roblox Fun Page — IP Checker</title>
+  <meta name="description" content="Roblox fan-themed IP checker. Not affiliated with Roblox. Shows your public IP safely.">
+
+  <style>
+    :root{
+      --bg:#f6f8fb;
+      --card:#ffffff;
+      --brand:#ff3b3b; 
+      --accent:#111827;
+      --muted:#6b7280;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto;
+      background:linear-gradient(180deg,#eef2ff 0%, #f6f8fb 100%);
+      color:var(--accent);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:100vh;
+      padding:20px;
+    }
+    .wrap{
+      width:100%;
+      max-width:920px;
+      background:var(--card);
+      border-radius:12px;
+      box-shadow:0 10px 30px rgba(16,24,40,0.08);
+      padding:22px;
+      display:grid;
+      grid-template-columns: 1fr 320px;
+      gap:18px;
+    }
+    header{grid-column:1 / -1; display:flex; gap:14px; align-items:center}
+    .logo{
+      width:64px;height:64px;border-radius:8px;background:linear-gradient(135deg,var(--brand),#ff8b8b);
+      display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:20px;
+      box-shadow:0 8px 20px rgba(255,59,59,0.12);
+    }
+    h1{margin:0;font-size:22px}
+    p.lead{margin:4px 0 0;color:var(--muted);font-size:14px}
+
+    .left{padding:8px 6px;}
+    .ipcard{
+      margin-top:14px;padding:16px;border-radius:10px;border:1px solid rgba(16,24,40,0.04);
+      background:linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.6));
+    }
+    .ipval{font-size:30px;font-weight:800;letter-spacing:0.3px}
+    .note{color:var(--muted);margin-top:8px;font-size:13px}
+    .btn{
+      display:inline-block;padding:10px 14px;border-radius:10px;background:var(--brand);color:white;border:0;
+      cursor:pointer;font-weight:700;margin-top:10px;text-decoration:none;
+    }
+    .right{
+      padding:16px;background:linear-gradient(180deg, rgba(255,59,59,0.03), rgba(0,0,0,0));
+      border-radius:10px;min-height:140px;
+    }
+    .warning{
+      margin-top:10px;padding:10px;border-radius:8px;background:#fff7f7;border:1px solid rgba(255,59,59,0.12);
+      color:#5d1616;font-weight:700;font-size:13px;
+    }
+    pre{background:transparent;border-radius:8px;padding:8px;margin:10px 0;font-size:13px;color:var(--accent);overflow:auto}
+    footer{grid-column:1 / -1;margin-top:10px;color:var(--muted);font-size:12px}
+  </style>
+</head>
+<body>
+  <div class="wrap" role="main" aria-live="polite">
+    <header>
+      <div class="logo">R</div>
+      <div>
+        <h1>Roblox Fun Page — IP Checker</h1>
+        <p class="lead">A Roblox-themed fan tool that safely shows your public IP. Not affiliated with Roblox.</p>
+      </div>
+    </header>
+
+    <section class="left">
+      <div class="ipcard" id="ipCard">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div class="ipval" id="ipValue">—</div>
+            <div class="note" id="ipNote">Fetching your public IP…</div>
+          </div>
+          <div>
+            <button class="btn" id="refreshBtn">Refresh</button>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <strong>Extra info</strong>
+          <pre id="extraInfo">loading…</pre>
+        </div>
+      </div>
+
+      <div class="warning" role="status">
+        This is a Roblox fan page. It does NOT provide Robux or items. Never share your password anywhere.
+      </div>
+    </section>
+
+    <aside class="right">
+      <strong>How this works</strong>
+      <p style="margin-top:8px;color:var(--muted);font-size:13px">
+        This page uses a public API (<code>api.ipify.org</code>) to show your public IP. No accounts, no surveys, no tricks.
+      </p>
+
+      <div style="margin-top:18px">
+        <button class="btn" id="copyBtn">Copy IP</button>
+        <div id="copyStatus" style="margin-top:10px;color:var(--muted);font-size:13px"></div>
+      </div>
+    </aside>
+
+    <footer>
+      Made for fun and learning. Tell me if you want a custom background, logo, or effects!
+    </footer>
+  </div>
+
+  <script>
+    const ipValue = document.getElementById('ipValue');
+    const ipNote = document.getElementById('ipNote');
+    const extraInfo = document.getElementById('extraInfo');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const copyStatus = document.getElementById('copyStatus');
+
+    async function fetchIP(){
+      ipValue.textContent = '—';
+      ipNote.textContent = 'Fetching your public IP…';
+      extraInfo.textContent = 'loading…';
+      try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        if(!res.ok) throw new Error('API error: ' + res.status);
+        const data = await res.json();
+        const ip = data.ip || 'unknown';
+        ipValue.textContent = ip;
+        ipNote.textContent = 'This is your public IP address (what websites see).';
+        const ua = navigator.userAgent;
+        extraInfo.textContent = JSON.stringify({
+          ip,
+          userAgent: ua,
+          language: navigator.language || '',
+          platform: navigator.platform || '',
+          timestamp: new Date().toISOString()
+        }, null, 2);
+      } catch(err){
+        ipValue.textContent = 'Unavailable';
+        ipNote.textContent = 'Could not fetch IP — API blocked or offline.';
+        extraInfo.textContent = String(err);
+      }
+    }
+
+    refreshBtn.addEventListener('click', () => {
+      fetchIP();
+      copyStatus.textContent = '';
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      const text = ipValue.textContent;
+      if(!text || text === '—' || text === 'Unavailable') {
+        copyStatus.textContent = 'Nothing to copy';
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(text);
+        copyStatus.textContent = 'Copied!';
+      } catch(e){
+        copyStatus.textContent = 'Copy failed — try selecting manually.';
+      }
+    });
+
+    fetchIP();
+  </script>
+</body>
+</html>
